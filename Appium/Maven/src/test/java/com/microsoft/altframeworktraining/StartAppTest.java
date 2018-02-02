@@ -1,5 +1,6 @@
 package com.microsoft.altframeworktraining;
 
+import io.appium.java_client.MobileElement;
 import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.android.AndroidElement;
 import io.appium.java_client.remote.MobileCapabilityType;
@@ -11,10 +12,20 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-public class StartAppTest {
-    private AndroidDriver<AndroidElement> driver;
 
-    public static AndroidDriver<AndroidElement> startApp() throws MalformedURLException {
+import com.microsoft.appcenter.appium.Factory;
+import com.microsoft.appcenter.appium.EnhancedAndroidDriver;
+import org.junit.rules.TestWatcher;
+import org.junit.Rule;
+
+public class StartAppTest {
+    @Rule
+    public TestWatcher watcher = Factory.createWatcher();
+
+//    private AndroidDriver<AndroidElement> driver;
+    private static EnhancedAndroidDriver<MobileElement> driver;
+
+    public static EnhancedAndroidDriver<MobileElement> startApp() throws MalformedURLException {
         DesiredCapabilities capabilities = new DesiredCapabilities();
 
         capabilities.setCapability(MobileCapabilityType.PLATFORM_NAME, "android");
@@ -25,18 +36,25 @@ public class StartAppTest {
 
         URL url = new URL("http://localhost:4723/wd/hub");
 
-        return new AndroidDriver<AndroidElement>(url, capabilities);
+        return Factory.createAndroidDriver(url, capabilities);
     }
 
 
     @Test
-    public void canStartAppInTest() throws MalformedURLException {
+    public void canStartAppInTest() throws MalformedURLException, InterruptedException {
         driver = startApp();
+
+        MobileElement elem = Util.findByByOrName(driver, By.id("com.moonpi.swiftnotes:id/newNote"), "+");
+        elem.click();
+        Thread.sleep(5000);
+
+
     }
 
     @After
     public void after() throws Exception {
         if (driver != null) {
+            driver.label("Stopping App");
             driver.quit();
         }
     }
