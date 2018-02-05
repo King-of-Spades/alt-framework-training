@@ -22,8 +22,8 @@ namespace Americano.UITests
         [Test]
         public void ClickingButtonTwiceShouldChangeItsLabel()
         {
-			//Func<AppQuery, AppQuery> MyButton = c => c.Button("myButton");
-            Func<AppQuery, AppQuery> MyButton = c => c.Id(Resource.Id.myButton);
+			Func<AppQuery, AppQuery> MyButton = c => c.Button("myButton");
+            //Func<AppQuery, AppQuery> MyButton = c => c.Id(Resource.Id.myButton);
 
 			app.Tap(MyButton);
             app.Tap(MyButton);
