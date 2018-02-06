@@ -1,5 +1,6 @@
 package com.moonpi.swiftnotes;
 
+
 import android.support.test.espresso.ViewInteraction;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
@@ -10,125 +11,100 @@ import android.view.ViewParent;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
-import org.json.JSONObject;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.UUID;
-
-import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
+import static android.support.test.espresso.action.ViewActions.pressImeActionButton;
 import static android.support.test.espresso.action.ViewActions.replaceText;
 import static android.support.test.espresso.action.ViewActions.scrollTo;
-import static android.support.test.espresso.assertion.ViewAssertions.doesNotExist;
-import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.matcher.ViewMatchers.hasFocus;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.withChild;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
 import static android.support.test.espresso.matcher.ViewMatchers.withContentDescription;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
-import static android.support.test.espresso.matcher.ViewMatchers.withParent;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
-import static org.hamcrest.CoreMatchers.allOf;
-import static org.hamcrest.CoreMatchers.endsWith;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.is;
 
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class CreateNoteTest {
+
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule = new ActivityTestRule<>(MainActivity.class);
 
     @Test
-    public void testCreateNote() {
+    public void createNoteTest() {
         ViewInteraction appCompatImageButton = onView(
-                allOf(withId(R.id.newNote), withContentDescription("New note"), isDisplayed()));
+                allOf(withId(R.id.newNote), withContentDescription("New note"),
+                        childAtPosition(
+                                childAtPosition(
+                                        withId(android.R.id.content),
+                                        0),
+                                2),
+                        isDisplayed()));
         appCompatImageButton.perform(click());
-            ViewInteraction appCompatEditText = onView(
+
+        ViewInteraction appCompatEditText = onView(
                 allOf(withId(R.id.titleEdit),
-                        withParent(allOf(withId(R.id.relativeLayoutEdit),
-                                withParent(withId(android.R.id.content)))),
+                        childAtPosition(
+                                allOf(withId(R.id.relativeLayoutEdit),
+                                        childAtPosition(
+                                                withId(android.R.id.content),
+                                                0)),
+                                1),
                         isDisplayed()));
-        appCompatEditText.perform(click());
+        appCompatEditText.perform(replaceText("My Note"), closeSoftKeyboard());
+
         ViewInteraction appCompatEditText2 = onView(
-                allOf(withId(R.id.titleEdit),
-                        withParent(allOf(withId(R.id.relativeLayoutEdit),
-                                withParent(withId(android.R.id.content)))),
+                allOf(withId(R.id.titleEdit), withText("My Note"),
+                        childAtPosition(
+                                allOf(withId(R.id.relativeLayoutEdit),
+                                        childAtPosition(
+                                                withId(android.R.id.content),
+                                                0)),
+                                1),
                         isDisplayed()));
-        appCompatEditText2.perform(replaceText("My note"), closeSoftKeyboard());
+        appCompatEditText2.perform(pressImeActionButton());
+
         ViewInteraction appCompatEditText3 = onView(
                 allOf(withId(R.id.bodyEdit),
-                        withParent(allOf(withId(R.id.scrollView),
-                                withParent(withId(R.id.relativeLayoutEdit))))));
-        appCompatEditText3.perform(scrollTo(), replaceText("My note content"), closeSoftKeyboard());
+                        childAtPosition(
+                                allOf(withId(R.id.scrollView),
+                                        childAtPosition(
+                                                withId(R.id.relativeLayoutEdit),
+                                                2)),
+                                0)));
+        appCompatEditText3.perform(scrollTo(), replaceText("This is my note."), closeSoftKeyboard());
+
         ViewInteraction appCompatImageButton2 = onView(
-                Matchers.allOf(withClassName(Matchers.is("android.support.v7.widget.AppCompatImageButton")),
-                        withParent(Matchers.allOf(withId(R.id.toolbarEdit),
-                                withParent(withId(R.id.relativeLayoutEdit)))),
+                allOf(childAtPosition(
+                        allOf(withId(R.id.toolbarEdit),
+                                childAtPosition(
+                                        withId(R.id.relativeLayoutEdit),
+                                        0)),
+                        0),
                         isDisplayed()));
         appCompatImageButton2.perform(click());
+
         ViewInteraction appCompatButton = onView(
-                allOf(withId(android.R.id.button1), withText("Yes")));
-        appCompatButton.perform(scrollTo(), click());
-        ViewInteraction textView = onView(
-                allOf(withId(R.id.titleView), withText("My note"),
+                allOf(withId(android.R.id.button1), withText("Yes"),
                         childAtPosition(
-                                allOf(withId(R.id.relativeLayout),
-                                        childAtPosition(
-                                                withId(R.id.listView),
-                                                0)),
-                                0),
-                        isDisplayed()));
-        textView.check(matches(withText("My note")));
-    }
+                                childAtPosition(
+                                        withClassName(is("android.widget.ScrollView")),
+                                        0),
+                                3)));
+        appCompatButton.perform(scrollTo(), click());
 
-    @Test
-    public void testCreateNoteHandCurated() {
-        onView(withId(R.id.newNote)).perform(click()).check(doesNotExist());
-
-        ViewInteraction title = onView(withId(R.id.titleEdit));
-        title.perform(click()).check(matches(hasFocus()));
-
-        // failed test showed that we only have 30 chars for title
-        String uniqTitle = UUID.randomUUID().toString().substring(0, 29);
-        title.perform(replaceText(uniqTitle), closeSoftKeyboard());
-
-        onView(withId(R.id.bodyEdit)).perform(replaceText("My note content"), closeSoftKeyboard());
-
-        onView(allOf(withClassName(endsWith("AppCompatImageButton")), withParent(withId(R.id.toolbarEdit))))
-                .perform(click());
-
-        onView(withText(R.string.yes_button)).check(matches(isDisplayed()))
-                .perform(click());
-
-        onData(allOf(is(instanceOf(JSONObject.class)), hasTitle(uniqTitle)))
-                .check(matches(withChild(allOf(withId(R.id.titleView), withText(uniqTitle), isDisplayed()))));
-    }
-
-    private Matcher<JSONObject> hasTitle(final String title) {
-        return new TypeSafeMatcher<JSONObject>() {
-            @Override
-            protected boolean matchesSafely(JSONObject item) {
-                return item.has(DataUtils.NOTE_TITLE) &&
-                        title.contentEquals(item.optString(DataUtils.NOTE_TITLE));
-            }
-
-            @Override
-            public void describeTo(Description description) {
-                description.appendText(String.format("hasTitle %s", title));
-            }
-        };
     }
 
     private static Matcher<View> childAtPosition(
             final Matcher<View> parentMatcher, final int position) {
+
         return new TypeSafeMatcher<View>() {
             @Override
             public void describeTo(Description description) {
